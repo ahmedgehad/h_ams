@@ -4,144 +4,68 @@ import pandas as pd
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+# Import helper customized functions
 from helperFunctions.read_data import import_data
+from helperFunctions.check_merge_data import merge_check_data
+from helperFunctions.tidy_data import clean_data
+from helperFunctions.cohorts import *
 
 # Read row files data
-rowConvPath = 'data/table_A_conversions.csv'
-rowAttrPath = 'data/table_B_attribution.csv'
+rowConvPath = "data/table_A_conversions.csv"
+rowAttrPath = "data/table_B_attribution.csv"
 rowConvData, rowAttrData = import_data(rowConvPath, rowAttrPath)
-# rowConvData = pd.read_csv('data/table_A_conversions.csv')
-# rowAttrData = pd.read_csv('data/table_B_attribution.csv')
 
-# print files details
-print(rowConvData.info())
-print('\n')
-print(rowAttrData.info())
+# Merge data
+rowDataMerged = merge_check_data(rowConvData, rowAttrData)
 
-# Merge two tables based on Conversion ID with inner join to get common data only
-rowMerged = rowConvData.merge(rowAttrData, on='Conv_ID', how='inner')
+# Get clean data frame
+cleanUserAttr_df = clean_data(rowDataMerged)
 
+# Save the new tidy data frame to a new CSV file
+cleanUserAttr_df.to_csv("data/cleanUserAttr_df.csv")
 
-# Explore new table
-print('Info\n')
-print(rowMerged.info())
-print('\n------------------------------------\nHead\n')
-print(rowMerged.head())
-print('\n------------------------------------\nNumber of unique categories in each field\n')
-print(rowMerged.nunique())
-print('\n------------------------------------\nNumber of missing values and its portion of the data\n')
-print(pd.DataFrame({'count':rowMerged.isnull().sum(), 'Pct% of the data':rowMerged.isnull().mean() * 100}))
+# Get a snapshot of the data collection date which is exactly after the maximum date with 1 day
+snapshot_date = max(cleanUserAttr_df.Conv_Date) + timedelta(days=1)
+print("Snapshot date " + str(snapshot_date))
 
-# Remove missing data since only 6638 rows have missing data (about 3%)
-rowMerged.dropna(axis=0, how='any', inplace=True)
-rowMerged.info()
-
-# Fix Conv_Date and Channel columns data types
-print('data types before fixing :\n')
-print(rowMerged.dtypes)
-rowMerged.Conv_Date = pd.to_datetime(rowMerged.Conv_Date)
-rowMerged.Channel = rowMerged.Channel.astype('category')
-print('\n\ndata types after fixing :\n')
-print(rowMerged.dtypes)
-
-# Data range and taking snapshot_date
-print('Min:{}; Max:{}'.format(min(rowMerged.Conv_Date),max(rowMerged.Conv_Date)))
-
-snapshot_date = max(rowMerged.Conv_Date) + timedelta(days=1)
-
-# Check whether any users conversed in the same day or more than one day
-print((rowMerged.groupby('Conv_ID')['Conv_Date'].agg('nunique') > 1).sum())
-
-ihcPerConv = rowMerged.pivot(index='Conv_ID', columns='Channel', values='IHC_Conv').fillna(-1)
-ihcPerConv.sort_index(inplace=True)
-ihcPerConv.head()
-
-cleanMerged = rowMerged.drop(['Channel', 'IHC_Conv'], axis=1)
-cleanMerged.drop_duplicates(inplace=True)
-cleanMerged.set_index('Conv_ID', inplace=True)
-cleanMerged.sort_index(inplace=True)
-cleanMerged.head()
-
-cleanData = pd.concat([cleanMerged, ihcPerConv], axis=1).reset_index()
-cleanData.to_csv('data/cleanData.csv')
-cleanData.head()
-
-
-# Time cohort
-# Define a function that will parse the date
-def get_day(x): return datetime(x.year, x.month, 1)
-
-cleanData['InvoiceMonth'] = cleanData.Conv_Date.apply(get_day)
-grouping = cleanData.groupby('User_ID')['InvoiceMonth']
-cleanData['CohortMonth'] = grouping.transform('min')
-print(cleanData.head())
-
-# Calculate time offset in days
-def get_date_int(df, column):
-    year = df[column].dt.year
-    month = df[column].dt.month
-#     day = df[column].dt.day
-    return year, month
-
-# Get the integers for date parts from the `InvoiceMonth` column
-invoice_year, invoice_month = get_date_int(cleanData, 'InvoiceMonth')
-# Get the integers for date parts from the `CohortMonth` column
-cohort_year, cohort_month = get_date_int(cleanData, 'CohortMonth')
-
-# Calculate difference in years
-years_diff = invoice_year - cohort_year
-# Calculate difference in months
-months_diff = invoice_month - cohort_month
-
-# Extract the difference in months from all previous values
-cleanData['CohortIndex'] = years_diff * 12 + months_diff + 1
-print(cleanData.head())
-
+# Get some KPI"s and insights
 # Revenue over time
-groupedByDate = cleanData.groupby('Conv_Date')
-groupedByDate['Revenue'].sum().plot()
-plt.title('Revenue Over Time')
-plt.xlabel('Transaction Month and Year')
-plt.ylabel('Total Revenue')
-plt.show()
+plot_rev_over_time(df=cleanUserAttr_df, df_gp_by="Conv_Date", df_col="Revenue", df_agg_func="sum",
+                   title="Revenue Over Time", xlab="Transaction Month and Year", ylab="Total Revenue",
+                   save_f_name="Revenue_Over_Time")
+print("We can notice that revenue is always high between march and april every year thus we conclude seasonal offers "
+      "or purchasing during this period")
 
-# Fraction of return cutomers
-fracReturnCustomers = (cleanData.groupby('User_ID')['Conv_ID'].nunique() > 1).sum() / cleanData.User_ID.nunique()
-print('Fraction of return cutomers is {:.2f} %'.format(fracReturnCustomers * 100))
+# Fraction of return customers
+fracReturnCustomers = (cleanUserAttr_df.groupby("User_ID")[
+                           "Conv_ID"].nunique() > 1).sum() / cleanUserAttr_df.User_ID.nunique()
+print("Fraction of return cutomers is {:.2f} %".format(fracReturnCustomers * 100))
+
+# Add cohort columns to the data frame
+add_cohort_columns(cleanUserAttr_df, "User_ID")
+print(cleanUserAttr_df.head())
 
 # Monthly Active customers in each cohort
-# groupby(['CohortMonth', 'CohortIndex']
-grouping = cleanData.groupby(['CohortMonth', 'CohortIndex'])
-
-# Count the number of unique values per customer ID
-cohort_data = grouping['User_ID'].apply(pd.Series.nunique).reset_index()
-
-# Create a pivot
-cohort_counts = cohort_data.pivot(index='CohortMonth', columns='CohortIndex', values='User_ID')
-cohort_counts.index = cohort_counts.index.to_period('M')
-plt.figure(figsize=(16, 14))
-plt.title('Monthly Active customers in each cohort')
-sns.heatmap(data=cohort_counts, annot=True, cmap='Blues')
-plt.yticks(rotation=0)
-plt.show()
+cohort_counts = build_time_cohort(df=cleanUserAttr_df, df_grp_by=["CohortMonth", "CohortIndex"], cohort_slic="User_ID",
+                                  func=pd.Series.nunique)
+vis_cohort(cohort_counts, "Monthly Active customers in each cohort", "Monthly_Active_customers_in_each_cohort")
+print("We can notice that the first column contains the total of active cohort customers in each cohort month")
+print("We can notice also that April 2017 has the most number of active users and cohort users")
 
 # Retention Rate Cohort
-cohort_sizes = cohort_counts.iloc[:,0]
+# Get the total cohort sizes or counts from the first column of the cohort_counts
+cohort_sizes = cohort_counts.iloc[:, 0]
 retention = cohort_counts.divide(cohort_sizes, axis=0)
-plt.figure(figsize=(16, 14))
-plt.title('Retention Rate Cohort')
-sns.heatmap(data=retention.iloc[:, 1:], annot=True, cmap='Blues')
-plt.yticks(rotation=0)
-plt.show()
+# Plot the Retention Rate Cohort and exclude the first column of the total for better visualization in the heat map
+vis_cohort(retention.iloc[:, 1:], "Retention Rate Cohort", "Retention_Rate_Cohort")
+print("I excluded the first column of the total for better visualization in the heat map")
 
 # Calculate total revenue by Monthly Cohorts
-grouping = cleanData.groupby(['CohortMonth', 'CohortIndex'])
-cohort_data = grouping['Revenue'].sum()
-cohort_data = cohort_data.reset_index()
-average_revenue = cohort_data.pivot(index='CohortMonth', columns='CohortIndex', values='Revenue')
-average_revenue.index = average_revenue.index.to_period('M')
-plt.figure(figsize=(16, 14))
-plt.title('Total Revenue by Monthly Cohorts')
-sns.heatmap(data=average_revenue, annot=True, fmt=".1f", cmap='Blues')
-plt.yticks(rotation=0)
+rev_counts = build_time_cohort(df=cleanUserAttr_df, df_grp_by=["CohortMonth", "CohortIndex"], cohort_slic="Revenue",
+                               func=sum)
+vis_cohort(df=rev_counts, plt_title="Total Revenue by Monthly Cohorts", frmt=".1f",
+           save_f_name="Total_Revenue_by_Monthly_Cohorts")
+
+# Show plots at the end of the run
 plt.show()

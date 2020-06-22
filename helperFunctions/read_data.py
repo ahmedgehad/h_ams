@@ -1,6 +1,7 @@
 import pandas as pd
 
-def import_data(file1, file2):
+
+def import_data(file1: str, file2: str) -> object:
     """
     Read 2 csv files and return them in 2 pandas data frames
     :param file1: path of the first file
