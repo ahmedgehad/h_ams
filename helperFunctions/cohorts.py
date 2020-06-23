@@ -10,7 +10,8 @@ from helperFunctions.date_time_utils import *
 # Add cohort columns to the data frame
 def add_cohort_columns(df, df_grp_by):
     """
-    Add InvoiceMonth, CohortMonth, anc CohortIndex columns to a data frame
+    Add InvoiceMonth, CohortMonth, and CohortIndex columns to a data frame
+    Add also InvoiceDay, CohortDoy, and CohortDayIndex columns to a data frame
     :param df: e passed data frame to add columns to
     :param df_grp_by: the required column names of the data frame to be grouped by
     :return: e new data frame with new columns added
@@ -19,6 +20,10 @@ def add_cohort_columns(df, df_grp_by):
     df['InvoiceMonth'] = df.Conv_Date.apply(get_month)
     # Create CohortMonth column
     df['CohortMonth'] = df.groupby(df_grp_by)['InvoiceMonth'].transform('min')
+    # Create InvoiceDay Column
+    df['InvoiceDay'] = df.Conv_Date.apply(get_day)
+    # Create CohortDay column
+    df['CohortDay'] = df.groupby(df_grp_by)['InvoiceDay'].transform('min')
     # Get the integers for date parts from the `InvoiceDay` column
     invoice_year, invoice_month = get_date_int(df, 'InvoiceMonth')
     # Get the integers for date parts from the `CohortDay` column
@@ -29,6 +34,8 @@ def add_cohort_columns(df, df_grp_by):
     months_diff = invoice_month - cohort_month
     # Extract the difference in months from all previous values
     df['CohortIndex'] = years_diff * 12 + months_diff + 1
+    # Get Cohort Day Index
+    df['CohortDayIndex'] = (df.InvoiceDay - df.CohortDay).dt.days + 1
 
     return df
 

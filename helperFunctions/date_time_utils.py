@@ -30,11 +30,21 @@ def plot_rev_over_time(df, df_gp_by, df_col, df_agg_func, title, xlab, ylab, sav
 # Parse the date to "YYYY-mm-01" to get the month of the transaction only
 def get_month(x):
     """
-    Parse the date to "YYYY-mm-01" to get the month of the transaction only
+    Parse the date to "YYYY-mm-01" to get the month and year of the transaction
     :param x: datetime pandas series column
     :return: Date inf the format "YYYY-mm-01"
     """
     return datetime(x.year, x.month, 1)
+
+
+# Parse the date to "YYYY-mm-dd" to get the month of the transaction only
+def get_day(x):
+    """
+    Parse the date to "YYYY-mm-dd" to get the full date of the transaction
+    :param x: datetime pandas series column
+    :return: Date inf the format "YYYY-mm-dd"
+    """
+    return datetime(x.year, x.month, x.day)
 
 
 # Get year and month from date
@@ -43,7 +53,7 @@ def get_date_int(df, column):
     Get year and month from date from a column of a data frame
     :param df: data frame contains the required datetime column
     :param column: datetime column required to extract info from
-    :return:
+    :return: year and month
     """
     year = df[column].dt.year
     month = df[column].dt.month

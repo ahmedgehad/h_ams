@@ -19,15 +19,14 @@ rowConvData, rowAttrData = import_data(rowConvPath, rowAttrPath)
 # Merge data
 rowDataMerged = merge_check_data(rowConvData, rowAttrData)
 
+# Get unique Channels
+uniqueChannels = sorted(rowDataMerged.Channel.unique().to_list())
+
 # Get clean data frame
 cleanUserAttr_df = clean_data(rowDataMerged)
 
 # Save the new tidy data frame to a new CSV file
 cleanUserAttr_df.to_csv("data/cleanUserAttr_df.csv")
-
-# Get a snapshot of the data collection date which is exactly after the maximum date with 1 day
-snapshot_date = max(cleanUserAttr_df.Conv_Date) + timedelta(days=1)
-print("Snapshot date " + str(snapshot_date))
 
 # Get some KPI"s and insights
 # Revenue over time
@@ -66,6 +65,34 @@ rev_counts = build_time_cohort(df=cleanUserAttr_df, df_grp_by=["CohortMonth", "C
                                func=sum)
 vis_cohort(df=rev_counts, plt_title="Total Revenue by Monthly Cohorts", frmt=".1f",
            save_f_name="Total_Revenue_by_Monthly_Cohorts")
+
+# Get a snapshot of the data collection date which is exactly after the maximum date with 1 day
+snapshot_date = max(cleanUserAttr_df.Conv_Date) + timedelta(days=1)
+print("Snapshot date " + str(snapshot_date))
+
+# RFMT segmentation
+# Recency - R - days since last customer transaction
+# Frequency - F - number of transactions in the last 13 months
+# Monetary Value - M - total spend in the last 13 months
+# Tenure - T - time since the first transaction
+
+# Get RFMT data
+# rfmtDatamart = build_rfmt(cleanUserAttr_cleanUserAttr_df, snapshot_date)
+
+# Group Data
+dataPerUID = cleanUserAttr_df.groupby('User_ID')
+
+# Calculate Recency, Frequency, Monetary and Tenure values for each customer
+recency = lambda x: (snapshot_date - x.max()).days
+tenure = lambda x: (snapshot_date - x.min()).days
+
+# Build RFMT
+rfmt_datamart = dataPerUID.agg(
+    Recency=('InvoiceDay', recency),
+    Frequency=('Conv_ID', 'count'),
+    MonetaryValue=('Revenue', sum),
+    Tenure=('InvoiceDay', tenure))
+print(rfmt_datamart.head())
 
 # Show plots at the end of the run
 plt.show()
