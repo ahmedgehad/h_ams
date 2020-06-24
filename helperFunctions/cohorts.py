@@ -76,5 +76,4 @@ def vis_cohort(df, plt_title, save_f_name, frmt=".2g"):
     sns.heatmap(data=df, annot=True, fmt=frmt, cmap='Blues')
     plt.yticks(rotation=0)
     plt.savefig("visualizations/" + save_f_name + ".png", dpi=600)
-    plt.draw()
-    # plt.show()
+    plt.show()

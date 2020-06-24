@@ -23,9 +23,7 @@ def plot_rev_over_time(df, df_gp_by, df_col, df_agg_func, title, xlab, ylab, sav
     plt.ylabel(ylab)
     plt.tight_layout()
     plt.savefig("visualizations/" + save_f_name + ".png", dpi=600)
-    plt.draw()
-    # plt.show()
-
+    plt.show()
 
 # Parse the date to "YYYY-mm-01" to get the month of the transaction only
 def get_month(x):
