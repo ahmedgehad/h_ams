@@ -7,7 +7,7 @@ def basic_clv(df, u_id, invoice_month, revenue, life_span_months):
     monthly_revenue = df.groupby([u_id, invoice_month])[revenue].sum().mean()
     # Calculate average monthly spend
     monthly_revenue = np.mean(monthly_revenue)
-    # Define lifespan to 36 months
+    # Define lifespan to specific months period
     lifespan_months = life_span_months
     # Calculate basic CLV
     clv_basic = monthly_revenue * lifespan_months
@@ -21,7 +21,7 @@ def granular_clv(df, u_id, invoice_month, revenue, Conv_ID, life_span_months):
     revenue_per_purchase = df.groupby([Conv_ID])[revenue].mean().mean()
     # Calculate average number of unique invoices per customer per month
     freq = df.groupby([u_id, invoice_month])[Conv_ID].nunique().mean()
-    # Define lifespan to 36 months
+    # Define lifespan to specific months period
     lifespan_months = life_span_months
     # Calculate granular CLV
     clv_granular = revenue_per_purchase * freq * lifespan_months

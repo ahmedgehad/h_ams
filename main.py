@@ -1,9 +1,11 @@
 # Import necessary files
+import numpy as np
 from helperFunctions.check_merge_data import merge_check_data
 from helperFunctions.clustering import *
 from helperFunctions.clv import basic_clv, granular_clv, traditional_clv
 from helperFunctions.cohorts import *
 from helperFunctions.outlier_detection import outlier_detection
+from helperFunctions.predict_customer_transaction_for_last_month import train_model_to_predict_sales
 from helperFunctions.read_data import import_data
 from helperFunctions.segmantation import *
 from helperFunctions.tidy_data import clean_data
@@ -131,3 +133,6 @@ plot_clusters(sse)
 show_clusters_hmap(df=rmtihc, km_labels=clusters_labels, k=6)
 show_clusters_hmap(df=rmtihc, km_labels=clusters_labels, k=7)
 print("We can see from this plot that 7 clusters is more appropriate to represent our data")
+
+# Train a simple linear regression model to preidct custemer sales for the last month
+lm_model = train_model_to_predict_sales(df=tidyUserAttr_df, channels_to_keep=uniqueChannels)
