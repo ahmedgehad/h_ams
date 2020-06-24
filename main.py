@@ -7,7 +7,7 @@ from helperFunctions.cohorts import *
 from helperFunctions.outlier_detection import outlier_detection
 from helperFunctions.predict_customer_transaction_for_last_month import train_model_to_predict_sales
 from helperFunctions.read_data import import_data
-from helperFunctions.segmantation import *
+from helperFunctions.rfmt_ihc import *
 from helperFunctions.tidy_data import clean_data
 
 # Read row files data
@@ -115,7 +115,7 @@ print('Data loss = ' + str(RfmtIhcDM.shape[0] - rmtihc.shape[0]) + " which is " 
 print(rmtihc.describe().T)
 
 # Save the clean and tidy rmtihc data set
-rmtihc.to_csv("clean_rmtihc.csv")
+rmtihc.to_csv("data/clean_rmtihc.csv")
 
 # Data distribution after dropping Frequency column, and removing outliers and from the MonetaryValue column
 for x in rmtihc.columns:
@@ -128,11 +128,13 @@ for x in rmtihc.columns:
 
 # Clustering (using Kmeans)
 # Data preprocessing (feature transformation and scaling )
-sse, clusters_labels = create_kmeans_clusters(rmtihc)
+sse, clusters_labels = create_kmeans_clusters(rmtihc, 5)
 plot_clusters(sse)
-show_clusters_hmap(df=rmtihc, km_labels=clusters_labels, k=6)
-show_clusters_hmap(df=rmtihc, km_labels=clusters_labels, k=7)
-print("We can see from this plot that 7 clusters is more appropriate to represent our data")
+show_clusters_hmap(df=rmtihc, km_labels=clusters_labels, k=2)
+show_clusters_hmap(df=rmtihc, km_labels=clusters_labels, k=3)
+show_clusters_hmap(df=rmtihc, km_labels=clusters_labels, k=4)
+print(
+    "We can see from this plot that 2 or 3, or 4 clusters would be appropriate to represent our data from the elbow method")
 
 # Train a simple linear regression model to preidct custemer sales for the last month
 lm_model = train_model_to_predict_sales(df=tidyUserAttr_df, channels_to_keep=uniqueChannels)

@@ -20,6 +20,7 @@ def plot_rev_over_time(df, df_gp_by, df_col, df_agg_func, title, xlab, ylab, sav
     groupedByDate[df_col].agg(df_agg_func).plot()
     plt.title(title)
     plt.xlabel(xlab)
+    plt.xticks(rotation=90)
     plt.ylabel(ylab)
     plt.tight_layout()
     plt.savefig("visualizations/" + save_f_name + ".png", dpi=600)

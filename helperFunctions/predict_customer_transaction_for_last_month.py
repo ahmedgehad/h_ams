@@ -4,7 +4,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.model_selection import train_test_split
 
-from helperFunctions.segmantation import *
+from helperFunctions.rfmt_ihc import *
 
 
 def get_train_test_data(df, channels_to_keep):

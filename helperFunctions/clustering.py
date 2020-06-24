@@ -34,7 +34,7 @@ def create_kmeans_clusters(df, n_clust=11):
         kmeans_c = KMeans(n_clusters=k, n_jobs=-1, random_state=333)
         steps = [('power_transformation', pow_trans), ('kmeans_clustering', kmeans_c)]
         pipeline = Pipeline(steps=steps)
-        pipeline.fit(df)
+        df = pipeline.fit_transform(df)
         sse[k] = pipeline.steps[1][1].inertia_
         km_labels[k] = pipeline.steps[1][1].labels_
 
@@ -59,8 +59,7 @@ def show_clusters_hmap(df, km_labels, k):
     kmeans_averages = df_kmeans.groupby(['segment']).mean().round(0)
     # Print the average column values per each segment
     # Heatmap based on the average column values per each segment
-    sns.heatmap(kmeans_averages.T, cmap='YlGnBu')
-    print(kmeans_averages)
+    sns.heatmap(kmeans_averages.T, cmap='YlGnBu', annot=True, fmt='.1f')
     plt.title("Average Column Values per each of " + str(k) + " Segment or Clusters")
     plt.tight_layout()
     plt.savefig("visualizations/kmeans_clusters_" + str(k) + ".png", dpi=1200)
