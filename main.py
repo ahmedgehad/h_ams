@@ -35,7 +35,7 @@ print("We can notice that revenue is always high between march and april every y
 # Fraction of return customers
 fracReturnCustomers = (tidyUserAttr_df.groupby("User_ID")[
                            "Conv_ID"].nunique() > 1).sum() / tidyUserAttr_df.User_ID.nunique()
-print("Fraction of return cutomers is {:.2f} %".format(fracReturnCustomers * 100))
+print("Fraction of return customers is {:.2f} %".format(fracReturnCustomers * 100))
 
 # Add cohort columns to the data frame
 tidyUserAttr_df = add_cohort_columns(tidyUserAttr_df, "User_ID")
@@ -85,14 +85,17 @@ print("Snapshot date :" + str(snapshot_date))
 
 # Get RFMT data
 rfmtDM = build_rfmt(df=tidyUserAttr_df, snapshot_date=snapshot_date)
+print(rfmtDM.head())
 
 # Get IHC data
 ihcDM = build_ihc(df=tidyUserAttr_df, channels=uniqueChannels)
+print(ihcDM.head())
 
 # Get RFMT_IHC data
 RfmtIhcDM = build_rfmt_ihc(rfmt_dm=rfmtDM, ihc_dm=ihcDM)
 
 RfmtIhcDM.set_index('key_0', inplace=True)
+print(ihcDM.head())
 
 # Data Exploration and cleaning process
 # Exploratory Data Analysis (EDA)
@@ -129,9 +132,7 @@ for x in rmtihc.columns:
 # Clustering (using Kmeans)
 # Data preprocessing (feature transformation and scaling )
 sse, clusters_labels = create_kmeans_clusters(rmtihc, 5)
-
-plot_clusters(sse
-
+plot_clusters(sse)
 show_clusters_hmap(df=rmtihc, km_labels=clusters_labels, k=2)
 show_clusters_hmap(df=rmtihc, km_labels=clusters_labels, k=3)
 show_clusters_hmap(df=rmtihc, km_labels=clusters_labels, k=4)

@@ -36,8 +36,6 @@ def build_rfmt(df, snapshot_date, grp_by='User_ID'):
         Frequency=('Conv_ID', 'count'),
         MonetaryValue=('Revenue', sum),
         Tenure=('InvoiceDay', tenure))
-    print(rfmt_datamart.head())
-
     return rfmt_datamart
 
 
@@ -56,7 +54,6 @@ def build_ihc(df, channels, grp_by='User_ID'):
     # Build IHC averages per customer per channel and fill missing values with 0 value to the mean ihc
     ihc_dm = data_per_uid.agg({i: 'mean' for i in channels}).fillna(0)
     ihc_dm.columns = ["_".join(x) for x in ihc_dm.columns]
-    print(ihc_dm.head())
 
     return ihc_dm
 
@@ -73,7 +70,5 @@ def build_rfmt_ihc(rfmt_dm, ihc_dm):
 
     # Build Full RFMT_IHC
     rfmt_ihc_dm = rfmt_dm.merge(ihc_dm, left_on=rfmt_dm.index, right_on=ihc_dm.index)
-    print(rfmt_ihc_dm.head())
-    print(rfmt_ihc_dm.describe().T)
 
     return rfmt_ihc_dm
