@@ -129,7 +129,9 @@ for x in rmtihc.columns:
 # Clustering (using Kmeans)
 # Data preprocessing (feature transformation and scaling )
 sse, clusters_labels = create_kmeans_clusters(rmtihc, 5)
-plot_clusters(sse)
+
+plot_clusters(sse
+
 show_clusters_hmap(df=rmtihc, km_labels=clusters_labels, k=2)
 show_clusters_hmap(df=rmtihc, km_labels=clusters_labels, k=3)
 show_clusters_hmap(df=rmtihc, km_labels=clusters_labels, k=4)
