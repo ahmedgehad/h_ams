@@ -4,6 +4,20 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PowerTransformer
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd
+
+def view_data_scaled(df):
+    dftemp = PowerTransformer().fit_transform(df)
+    dftemp = pd.DataFrame(dftemp, columns=df.columns, index=df.index)
+    for x in df.columns:
+        print(x + ' Showing dist plots of data after scaling:')
+        sns.distplot(dftemp[x])
+        plt.title('Column ' + x + ' Distribution Plot After Scaling')
+        plt.savefig("visualizations/" + x + "_Distribution_Plot_after_scale.png", dpi=600)
+        plt.show()
+        print('----------------------')
+
+
 
 # Determine the optimal number of clusters
 # Create empty sse, and labels dictionary
@@ -13,9 +27,10 @@ km_labels = {}
 
 # Fit KMeans algorithm on k values between 1 and predifiened number of clusters
 def create_kmeans_clusters(df, n_clust=11):
+    view_data_scaled(df)
     for k in range(1, n_clust):
         pow_trans = PowerTransformer()
-        kmeans_c = KMeans(n_clusters=k, n_jobs=-1, random_state=333)
+        kmeans_c = KMeans(n_clusters=k, n_jobs=-1, random_state=123)
         steps = [('power_transformation', pow_trans), ('kmeans_clustering', kmeans_c)]
         pipeline = Pipeline(steps=steps)
         pipeline.fit(df)
@@ -46,6 +61,7 @@ def show_clusters_hmap(df, km_labels, k):
     print(kmeans_averages)
     # Heatmap based on the average column values per each segment
     sns.heatmap(kmeans_averages.T, cmap='YlGnBu')
-    plt.title("Visualize Average Column Values per each of " + str(k) + " Segment or Clusters")
+    plt.title("Average Column Values per each of " + str(k) + " Segment or Clusters")
+    plt.tight_layout()
     plt.savefig("visualizations/kmeans_clusters_" + str(k) + ".png", dpi=1200)
     plt.show()

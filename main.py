@@ -1,6 +1,7 @@
 # Import necessary files
 from helperFunctions.check_merge_data import merge_check_data
 from helperFunctions.clustering import *
+from helperFunctions.clv import basic_clv, granular_clv, traditional_clv
 from helperFunctions.cohorts import *
 from helperFunctions.outlier_detection import outlier_detection
 from helperFunctions.read_data import import_data
@@ -35,7 +36,7 @@ fracReturnCustomers = (tidyUserAttr_df.groupby("User_ID")[
 print("Fraction of return cutomers is {:.2f} %".format(fracReturnCustomers * 100))
 
 # Add cohort columns to the data frame
-add_cohort_columns(tidyUserAttr_df, "User_ID")
+tidyUserAttr_df = add_cohort_columns(tidyUserAttr_df, "User_ID")
 print(tidyUserAttr_df.head())
 
 # Monthly Active customers in each cohort
@@ -57,6 +58,17 @@ rev_counts = build_time_cohort(df=tidyUserAttr_df, df_grp_by=["CohortMonth", "Co
                                func=sum)
 vis_cohort(df=rev_counts, plt_title="Total Revenue by Monthly Cohorts", frmt=".1f",
            save_f_name="Total_Revenue_by_Monthly_Cohorts")
+
+# Calculate CLV
+# Basic CLV calculation
+basic_clv(tidyUserAttr_df, "User_ID", "InvoiceMonth", "Revenue", 36)
+
+# Granular CLV calculation
+granular_clv(tidyUserAttr_df, "User_ID", "InvoiceMonth", "Revenue", "Conv_ID", 36)
+
+# Traditional CLV
+# # Calculate monthly spend per customer
+traditional_clv(tidyUserAttr_df, retention, "User_ID", "InvoiceMonth", "Revenue")
 
 # Get a snapshot of the data collection date which is exactly after the maximum date with 1 day
 snapshot_date = extract_snap_date(tidyUserAttr_df)
@@ -112,10 +124,10 @@ for x in rmtihc.columns:
     plt.show()
     print('----------------------')
 
-
 # Clustering (using Kmeans)
 # Data preprocessing (feature transformation and scaling )
 sse, clusters_labels = create_kmeans_clusters(rmtihc)
 plot_clusters(sse)
-show_clusters_hmap(df=rmtihc, km_labels=km_labels, k=6)
-show_clusters_hmap(df=rmtihc, km_labels=km_labels, k=7)
+show_clusters_hmap(df=rmtihc, km_labels=clusters_labels, k=6)
+show_clusters_hmap(df=rmtihc, km_labels=clusters_labels, k=7)
+print("We can see from this plot that 7 clusters is more appropriate to represent our data")
